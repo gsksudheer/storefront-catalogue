@@ -44,6 +44,9 @@ I treated the AI as a fast pair programmer, and I made the decisions. The loop f
 5. **UI quality bar.** _"the UI should be so good, clean, neat and user friendly"_
    Beyond writing the components, I had the AI **look at the running app** (headless Chrome screenshots, desktop and mobile). That found three layout bugs the unit tests couldn't (see below).
 
+6. **Second UI pass.** _"put a logo instead of S, search should be working, add light and dark theme, forms should be clean, show the email option here itself so reviewers can open and view it"_
+   I checked search in a real browser first (it worked; the real gap was no way to clear the box, plus no feedback while typing). That led to live suggestions with keyboard support and a clear button. The email request became a **demo-only, config-gated** deep link to the exact email in Mailpit, which helps reviewers without leaking into production builds.
+
 ## Where the AI got things wrong, and how they were caught
 
 | # | What the AI got wrong | How it was caught | Fix |
@@ -54,6 +57,7 @@ I treated the AI as a fast pair programmer, and I made the decisions. The loop f
 | 4 | **Validation errors exposed zod's internal fields** (`origin`, `inclusive`, …) to API clients, tying the contract to the library. | Reading the **live API output**, not just the test results. | Reduced to `{ field, message }`, with a test. |
 | 5 | **Mobile layout:** the Search button ran off the screen at 390px. **Uneven card heights** with tall images. **Broken-image icons** when an image failed to load. | **Screenshots of the real UI** in headless Chrome. The unit tests were green for all three. | Measured the layout instead of guessing: the cause was flexbox `min-width: auto` (the input's default ~20-character width). Fixed with `min-width: 0`; cards with `overflow: hidden` (CSS `aspect-ratio` only holds when content is clipped); images with a `ProductImage` placeholder component and a test. |
 | 6 | The AI's own **screenshot script clicked the header's Search button** instead of the enquiry form's submit, which looked like the enquiry flow was broken. | Debugged *before* changing app code: logged the network requests and saw that no enquiry request had been sent. | Fixed the script's selector. The app was fine. Lesson: verify the verifier. |
+| 8 | After the redesign, **the 5 top-rated picks wrapped as 4 + 1**, leaving one orphan card. | Screenshot review of the redesigned home page in both themes. | Changed the grid column minimum, then **measured** rows at 1440, 1280 and 1024px instead of eyeballing. |
 | 7 | The UI CSS had **5 hard-coded colours**, breaking the rule in our own `CLAUDE.md` ("no hard-coded colours"). | Checking the code against `CLAUDE.md` before the docs commit: `grep` for hex/rgb values outside `tokens.css`. | Moved them into design tokens. Lesson: instruction files guide the AI but don't guarantee compliance, so check against them. |
 
 **One the AI got right because it checked instead of assuming:** before writing the Fake Store adapter it called the live API and found that **unknown IDs return `200` with an empty body**, not `404`. A naive adapter would crash on that. It's handled and has a test.

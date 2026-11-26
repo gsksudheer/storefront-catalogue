@@ -26,7 +26,9 @@ docker compose up --build
 | **Sales inbox** (Mailpit): enquiry emails land here | http://localhost:8025 |
 | API health | http://localhost:4000/health |
 
-**Try the whole journey:** open a product → **Enquire about this product** → submit → see the "Thank you" message → open http://localhost:8025 to see the email.
+**Try the whole journey:** open a product → **Enquire about this product** → submit → on the "Thank you" panel click **View the email sent to sales**, which opens that exact email in the demo inbox. There's also an **Inbox** link in the header.
+
+**UI highlights:** light and dark themes (follows your OS, remembers your choice), live search suggestions (keyboard friendly, press `/` to focus search), category filters and sorting on search results, an accessible enquiry side panel, skeleton loading, and error/empty states with retry. Fully responsive.
 
 Configuration is optional. Sensible defaults are built in. To change anything (sales inbox address, rate limits, SMTP), run `cp .env.example .env` and edit it. Every setting is documented in [`.env.example`](./.env.example). Don't commit `.env`.
 
@@ -46,7 +48,7 @@ docker compose up -d mailpit           # optional: only needed to send enquiries
 
 ```bash
 cd api && npm test     # 71 tests: services, adapters, routes (Vitest + Supertest)
-cd ui  && npm test     # 27 tests: acceptance criteria as user journeys (Vitest + Testing Library)
+cd ui  && npm test     # 35 tests: acceptance criteria as user journeys + UI behaviour (Vitest + Testing Library)
 npm run lint && npm run typecheck   # in either project
 ```
 
