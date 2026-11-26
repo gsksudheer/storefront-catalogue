@@ -1,0 +1,4 @@
+{
+  "description": "Product IDs the business owner has chosen as 'top rated'. Order is display order.",
+  "productIds": ["1", "5", "9", "14", "18"]
+}
