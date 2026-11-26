@@ -1,0 +1,36 @@
+/*
+ * Design tokens. The creative team's look & feel lands here first:
+ * components reference these variables, never raw colours/sizes.
+ */
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #f6f6f7;
+  --color-text: #1b1b1f;
+  --color-muted: #5f6068;
+  --color-primary: #2f5bea;
+  --color-primary-contrast: #ffffff;
+  --color-danger: #c62828;
+  --color-border: #e2e2e6;
+
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --radius: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --max-width: 1120px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
