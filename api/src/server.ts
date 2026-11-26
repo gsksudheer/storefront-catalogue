@@ -1,27 +1,32 @@
 import { createApp } from './app.js';
 import { loadConfig } from './shared/config.js';
 import { logger } from './shared/logger.js';
-import { createCatalogueModule } from './modules/catalogue/index.js';
+import {
+  CachedProductSource,
+  createCatalogueModule,
+  FakeStoreProductSource,
+  JsonFeaturedProvider,
+} from './modules/catalogue/index.js';
 import { createEnquiryModule } from './modules/enquiry/index.js';
 
-/**
- * Composition root: the only place that knows which concrete adapters are used.
- * TODO(step 2/3): replace placeholder adapters with FakeStore, JSON featured, SMTP mailer.
- */
+/** Composition root: the only place that knows which concrete adapters are used. */
 const config = loadConfig();
 
+const productSource = new CachedProductSource(
+  new FakeStoreProductSource({ baseUrl: config.FAKESTORE_BASE_URL, timeoutMs: config.FAKESTORE_TIMEOUT_MS }),
+  { ttlMs: config.CATALOGUE_CACHE_TTL_SECONDS * 1000 },
+);
+
 const catalogue = createCatalogueModule({
-  productSource: {
-    listProducts: async () => [],
-    getProduct: async () => null,
-    listCategories: async () => [],
-  },
-  featuredProvider: { getFeaturedIds: async () => [] },
+  productSource,
+  featuredProvider: await JsonFeaturedProvider.fromFile(config.FEATURED_CONFIG_PATH),
 });
 
 const enquiry = createEnquiryModule({
+  // TODO(step 3): SMTP mailer
   mailer: { send: async () => {} },
-  productLookup: { getProductSummary: async () => null },
+  // In-process today; becomes an HTTP client if enquiry is split into its own service.
+  productLookup: { getProductSummary: (id) => catalogue.getProductSummary(id) },
   salesInbox: config.SALES_INBOX_EMAIL,
 });
 

@@ -6,6 +6,7 @@ const EnvSchema = z.object({
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   PRODUCT_SOURCE: z.enum(['fakestore']).default('fakestore'),
   FAKESTORE_BASE_URL: z.string().url().default('https://fakestoreapi.com'),
+  FAKESTORE_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
   CATALOGUE_CACHE_TTL_SECONDS: z.coerce.number().int().nonnegative().default(300),
   FEATURED_CONFIG_PATH: z.string().default('./config/featured.json'),
   MAIL_DRIVER: z.enum(['smtp']).default('smtp'),
