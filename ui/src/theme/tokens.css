@@ -1,36 +1,55 @@
 /*
- * Design tokens. The creative team's look & feel lands here first:
- * components reference these variables, never raw colours/sizes.
+ * Design tokens: the single place the creative team's look & feel lands.
+ * Components only reference these variables, never raw colours or sizes.
  */
 :root {
-  --color-bg: #ffffff;
-  --color-surface: #f6f6f7;
-  --color-text: #1b1b1f;
-  --color-muted: #5f6068;
-  --color-primary: #2f5bea;
+  /* colour */
+  --color-bg: #fafaf9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f5f4;
+  --color-text: #1c1917;
+  --color-muted: #57534e;
+  --color-subtle: #a8a29e;
+  --color-border: #e7e5e4;
+  --color-border-strong: #d6d3d1;
+  --color-primary: #0f766e;
+  --color-primary-hover: #115e59;
+  --color-primary-soft: #f0fdfa;
   --color-primary-contrast: #ffffff;
-  --color-danger: #c62828;
-  --color-border: #e2e2e6;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fef2f2;
+  --color-success: #15803d;
+  --color-success-soft: #f0fdf4;
+  --color-star: #f59e0b;
+  --color-focus: #2563eb;
 
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --radius: 8px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 16px;
-  --space-4: 24px;
-  --space-5: 40px;
-  --max-width: 1120px;
-}
+  /* type */
+  --font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: clamp(1.9rem, 1.4rem + 2vw, 2.75rem);
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: var(--font-body);
-  color: var(--color-text);
-  background: var(--color-bg);
+  /* space & shape */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+  --shadow-sm: 0 1px 2px rgb(28 25 23 / 0.06);
+  --shadow-md: 0 4px 16px rgb(28 25 23 / 0.08);
+  --shadow-lg: 0 12px 32px rgb(28 25 23 / 0.12);
+  --max-width: 1200px;
+  --header-height: 64px;
+  --transition: 160ms ease;
 }
