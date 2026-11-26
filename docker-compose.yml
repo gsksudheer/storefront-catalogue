@@ -1,0 +1,34 @@
+# One command local run: docker compose up --build
+#   UI       http://localhost:8080
+#   API      http://localhost:4000/health
+#   Inbox    http://localhost:8025   (Mailpit - catches all outgoing email, no account needed)
+services:
+  api:
+    build: ./api
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: production
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      CORS_ORIGIN: http://localhost:8080
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mailpit
+    restart: unless-stopped
+
+  ui:
+    build: ./ui
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "8025:8025"
+    restart: unless-stopped
