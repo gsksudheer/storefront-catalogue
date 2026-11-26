@@ -21,7 +21,11 @@ services:
     restart: unless-stopped
 
   ui:
-    build: ./ui
+    build:
+      context: ./ui
+      args:
+        # Demo only: shows "Inbox" links so reviewers can open sent emails. Omit for production.
+        VITE_DEMO_INBOX_URL: http://localhost:8025
     ports:
       - "8080:80"
     depends_on:

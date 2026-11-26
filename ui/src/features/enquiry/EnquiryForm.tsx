@@ -2,23 +2,35 @@ import { type ChangeEvent, type FormEvent, useEffect, useId, useRef, useState } 
 import { type ApiError, toApiError } from '../../api/client';
 import { submitEnquiry } from '../../api/endpoints';
 import type { Product } from '../../api/types';
+import { CheckIcon, CopyIcon, ExternalIcon } from '../../components/Icons';
+import { demoEmailUrl } from '../../lib/config';
 import { type EnquiryErrors, type EnquiryValues, validateEnquiry } from './validation';
 import styles from './EnquiryForm.module.css';
 
 type Status = { kind: 'editing' } | { kind: 'submitting' } | { kind: 'sent'; reference: string };
 
 const EMPTY: EnquiryValues = { name: '', email: '', phone: '', message: '', website: '' };
+const MESSAGE_MAX = 2000;
 
 function friendlyError(err: ApiError): string {
   if (err.status === 429) return "You've sent several enquiries in a short time. Please wait a few minutes and try again.";
   return err.message;
 }
 
-export function EnquiryForm({ product, onCancel }: { product: Product; onCancel: () => void }) {
+export function EnquiryForm({
+  product,
+  onDone,
+  onBusyChange,
+}: {
+  product: Product;
+  onDone: () => void;
+  onBusyChange?: (busy: boolean) => void;
+}) {
   const [values, setValues] = useState<EnquiryValues>(EMPTY);
   const [errors, setErrors] = useState<EnquiryErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>({ kind: 'editing' });
+  const [copied, setCopied] = useState(false);
   const firstFieldRef = useRef<HTMLInputElement>(null);
   const thankYouRef = useRef<HTMLHeadingElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -31,6 +43,9 @@ export function EnquiryForm({ product, onCancel }: { product: Product; onCancel:
   useEffect(() => {
     firstFieldRef.current?.focus();
   }, []);
+  useEffect(() => {
+    onBusyChange?.(status.kind === 'submitting');
+  }, [status.kind, onBusyChange]);
 
   const set = (field: keyof EnquiryValues) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setValues((v) => ({ ...v, [field]: e.target.value }));
@@ -76,21 +91,45 @@ export function EnquiryForm({ product, onCancel }: { product: Product; onCancel:
   }
 
   if (status.kind === 'sent') {
+    const emailUrl = demoEmailUrl(status.reference);
+    const copy = async () => {
+      try {
+        await navigator.clipboard.writeText(status.reference);
+        setCopied(true);
+      } catch {
+        /* clipboard unavailable: reference is still visible */
+      }
+    };
     return (
       <div className={styles.success} role="status">
         <div className={styles.check} aria-hidden="true">
-          ✓
+          <CheckIcon width={28} height={28} strokeWidth={2.5} />
         </div>
-        <h2 ref={thankYouRef} tabIndex={-1} className={styles.successTitle}>
+        <h2 ref={thankYouRef} tabIndex={-1} className={`display ${styles.successTitle}`}>
           Thank you, {values.name.trim().split(' ')[0]}!
         </h2>
-        <p>
+        <p className={styles.successText}>
           We've received your enquiry about <strong>{product.title}</strong>. Our sales team will reply to{' '}
           <strong>{values.email.trim()}</strong> soon.
         </p>
-        <p className={styles.reference}>
-          Reference: <code>{status.reference}</code>
-        </p>
+        <div className={styles.reference}>
+          <span>Reference</span>
+          <code>{status.reference}</code>
+          <button type="button" className={styles.copy} onClick={copy} aria-label="Copy reference">
+            {copied ? <CheckIcon width={16} height={16} /> : <CopyIcon width={16} height={16} />}
+          </button>
+        </div>
+        <div className={styles.successActions}>
+          {emailUrl && (
+            <a href={emailUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-block">
+              View the email sent to sales <ExternalIcon width={16} height={16} />
+            </a>
+          )}
+          <button type="button" className="btn btn-primary btn-block" onClick={onDone}>
+            Continue browsing
+          </button>
+        </div>
+        {emailUrl && <p className={styles.demoNote}>Demo only: emails are caught by Mailpit instead of being delivered.</p>}
       </div>
     );
   }
@@ -101,6 +140,7 @@ export function EnquiryForm({ product, onCancel }: { product: Product; onCancel:
     name,
     value: values[name],
     onChange: set(name),
+    disabled: submitting,
     'aria-invalid': errors[name] ? true : undefined,
     'aria-describedby': errors[name] ? `${uid}-${name}-error` : undefined,
     className: `${styles.input} ${errors[name] ? styles.invalid : ''}`,
@@ -113,13 +153,8 @@ export function EnquiryForm({ product, onCancel }: { product: Product; onCancel:
     );
 
   return (
-    <form ref={formRef} className={styles.form} onSubmit={onSubmit} noValidate aria-labelledby={`${uid}-title`}>
-      <div>
-        <h2 id={`${uid}-title`} className={styles.title}>
-          Enquire about this product
-        </h2>
-        <p className={styles.subtitle}>Leave your details and our sales team will get back to you.</p>
-      </div>
+    <form ref={formRef} className={styles.form} onSubmit={onSubmit} noValidate aria-label="Enquiry form">
+      <p className={styles.intro}>Leave your details and our sales team will get back to you by email.</p>
 
       {formError && (
         <div className={styles.alert} role="alert">
@@ -127,62 +162,78 @@ export function EnquiryForm({ product, onCancel }: { product: Product; onCancel:
         </div>
       )}
 
-      <div className={styles.row}>
+      <fieldset className={styles.group}>
+        <legend className={styles.legend}>Your details</legend>
         <div className={styles.field}>
           <label htmlFor={`${uid}-name`}>
             Name <span className={styles.required}>*</span>
           </label>
-          <input {...field('name')} ref={firstFieldRef} autoComplete="name" maxLength={100} required />
+          <input {...field('name')} ref={firstFieldRef} autoComplete="name" maxLength={100} placeholder="Jane Doe" required />
           {errorFor('name')}
         </div>
-        <div className={styles.field}>
-          <label htmlFor={`${uid}-email`}>
-            Email <span className={styles.required}>*</span>
-          </label>
-          <input {...field('email')} type="email" autoComplete="email" maxLength={254} required />
-          {errorFor('email')}
+        <div className={styles.row}>
+          <div className={styles.field}>
+            <label htmlFor={`${uid}-email`}>
+              Email <span className={styles.required}>*</span>
+            </label>
+            <input
+              {...field('email')}
+              type="email"
+              autoComplete="email"
+              maxLength={254}
+              placeholder="jane@example.com"
+              required
+            />
+            {errorFor('email')}
+          </div>
+          <div className={styles.field}>
+            <label htmlFor={`${uid}-phone`}>
+              Phone <span className={styles.optional}>optional</span>
+            </label>
+            <input {...field('phone')} type="tel" autoComplete="tel" maxLength={30} placeholder="+44 20 7946 0000" />
+            {errorFor('phone')}
+          </div>
         </div>
-      </div>
+      </fieldset>
 
-      <div className={styles.field}>
-        <label htmlFor={`${uid}-phone`}>
-          Phone <span className={styles.optional}>(optional)</span>
-        </label>
-        <input {...field('phone')} type="tel" autoComplete="tel" maxLength={30} />
-        {errorFor('phone')}
-      </div>
-
-      <div className={styles.field}>
-        <label htmlFor={`${uid}-message`}>
-          Message <span className={styles.optional}>(optional)</span>
-        </label>
-        <textarea
-          {...field('message')}
-          rows={4}
-          maxLength={2000}
-          placeholder="E.g. Is this available in other sizes? When could it be delivered?"
-        />
-        {errorFor('message')}
-      </div>
+      <fieldset className={styles.group}>
+        <legend className={styles.legend}>Your question</legend>
+        <div className={styles.field}>
+          <div className={styles.labelRow}>
+            <label htmlFor={`${uid}-message`}>
+              Message <span className={styles.optional}>optional</span>
+            </label>
+            <span className={styles.counter} aria-hidden="true">
+              {values.message.length}/{MESSAGE_MAX}
+            </span>
+          </div>
+          <textarea
+            {...field('message')}
+            rows={5}
+            maxLength={MESSAGE_MAX}
+            placeholder="E.g. Is this available in other sizes? When could it be delivered?"
+          />
+          {errorFor('message')}
+        </div>
+      </fieldset>
 
       {/* Honeypot: invisible to people, tempting to bots. */}
       <div className={styles.honeypot} aria-hidden="true">
         <label htmlFor={`${uid}-website`}>Website</label>
-        <input
-          id={`${uid}-website`}
-          name="website"
-          tabIndex={-1}
-          autoComplete="off"
-          value={values.website}
-          onChange={set('website')}
-        />
+        <input id={`${uid}-website`} name="website" tabIndex={-1} autoComplete="off" value={values.website} onChange={set('website')} />
       </div>
 
       <div className={styles.actions}>
-        <button type="submit" className="btn btn-primary" disabled={submitting}>
-          {submitting ? 'Sending…' : 'Send enquiry'}
+        <button type="submit" className="btn btn-primary btn-lg" disabled={submitting}>
+          {submitting ? (
+            <>
+              <span className="spinner" aria-hidden="true" /> Sending…
+            </>
+          ) : (
+            'Send enquiry'
+          )}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={submitting}>
+        <button type="button" className="btn btn-ghost" onClick={onDone} disabled={submitting}>
           Cancel
         </button>
       </div>

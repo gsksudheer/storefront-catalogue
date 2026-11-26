@@ -9,7 +9,7 @@ describe('Home page', () => {
     mockApi({ 'GET /api/catalogue/featured': ok({ products: featured }) });
     renderRoute('/');
 
-    const section = await screen.findByRole('region', { name: 'Top rated' });
+    const section = await screen.findByRole('region', { name: 'Our favourite picks' });
     const titles = await within(section).findAllByRole('heading', { level: 3 });
     expect(titles.map((t) => t.textContent)).toEqual(featured.map((p) => p.title));
   });

@@ -3,6 +3,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+# Demo-only: link to the Mailpit inbox. Leave empty for production builds.
+ARG VITE_DEMO_INBOX_URL=""
+ENV VITE_DEMO_INBOX_URL=$VITE_DEMO_INBOX_URL
 RUN npm run build
 
 FROM nginx:1.27-alpine

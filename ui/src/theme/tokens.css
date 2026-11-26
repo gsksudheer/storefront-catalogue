@@ -1,42 +1,51 @@
 /*
  * Design tokens: the single place the creative team's look & feel lands.
- * Components only reference these variables, never raw colours or sizes.
+ * Components only reference these variables. Light is the default; dark overrides
+ * via [data-theme='dark'] on <html> (set before first paint in index.html).
  */
 :root {
+  color-scheme: light;
+
   /* colour */
-  --color-bg: #fafaf9;
+  --color-bg: #f6f4ef;
   --color-surface: #ffffff;
-  --color-surface-muted: #f5f5f4;
-  --color-text: #1c1917;
-  --color-muted: #57534e;
-  --color-subtle: #a8a29e;
-  --color-border: #e7e5e4;
-  --color-border-strong: #d6d3d1;
-  --color-primary: #0f766e;
-  --color-primary-hover: #115e59;
-  --color-primary-soft: #f0fdfa;
+  --color-surface-muted: #efece5;
+  --color-media: #f0ede7;
+  --color-text: #191714;
+  --color-muted: #5e5a52;
+  --color-subtle: #9a958b;
+  --color-border: #e5e1d8;
+  --color-border-strong: #d3cdc1;
+  --color-primary: #1f5c4a;
+  --color-primary-hover: #174a3b;
+  --color-primary-soft: #e3eee8;
   --color-primary-contrast: #ffffff;
-  --color-danger: #b91c1c;
-  --color-danger-soft: #fef2f2;
-  --color-success: #15803d;
-  --color-success-soft: #f0fdf4;
-  --color-star: #f59e0b;
-  --color-focus: #2563eb;
-  --color-header-bg: rgb(255 255 255 / 0.92);
-  --color-hero-glow: rgb(15 118 110 / 0.12);
-  --color-danger-border: rgb(185 28 28 / 0.25);
-  --color-success-border: rgb(21 128 61 / 0.25);
+  --color-accent: #b8622d;
+  --color-accent-soft: #f6e6d9;
+  --color-star: #e0a100;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdeceb;
+  --color-danger-border: rgb(180 35 24 / 0.25);
+  --color-success: #1b7a4b;
+  --color-success-soft: #e6f4ec;
+  --color-success-border: rgb(27 122 75 / 0.25);
   --color-success-contrast: #ffffff;
+  --color-focus: #2f6fed;
+  --color-header-bg: rgb(246 244 239 / 0.85);
+  --color-overlay: rgb(20 18 15 / 0.45);
+  --color-hero-glow: rgb(31 92 74 / 0.14);
+  --color-hero-glow-2: rgb(184 98 45 / 0.12);
 
   /* type */
-  --font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fraunces Variable', ui-serif, Georgia, 'Times New Roman', serif;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
-  --text-3xl: clamp(1.9rem, 1.4rem + 2vw, 2.75rem);
+  --text-2xl: clamp(1.6rem, 1.3rem + 1vw, 2rem);
+  --text-3xl: clamp(2.2rem, 1.5rem + 3vw, 3.6rem);
 
   /* space & shape */
   --space-1: 0.25rem;
@@ -46,15 +55,51 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
   --space-7: 3rem;
-  --space-8: 4rem;
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 16px;
+  --space-8: 4.5rem;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 20px;
   --radius-full: 999px;
-  --shadow-sm: 0 1px 2px rgb(28 25 23 / 0.06);
-  --shadow-md: 0 4px 16px rgb(28 25 23 / 0.08);
-  --shadow-lg: 0 12px 32px rgb(28 25 23 / 0.12);
-  --max-width: 1200px;
-  --header-height: 64px;
-  --transition: 160ms ease;
+  --shadow-sm: 0 1px 2px rgb(25 23 20 / 0.06);
+  --shadow-md: 0 8px 24px rgb(25 23 20 / 0.08);
+  --shadow-lg: 0 24px 64px rgb(25 23 20 / 0.18);
+  --max-width: 1240px;
+  --transition: 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #0e1110;
+  --color-surface: #151918;
+  --color-surface-muted: #1c2120;
+  /* Product photos have white backgrounds, so they sit on a light "plate" in both themes. */
+  --color-media: #e9e6e0;
+  --color-text: #eceae5;
+  --color-muted: #a8a49b;
+  --color-subtle: #75716a;
+  --color-border: #252b29;
+  --color-border-strong: #333a38;
+  --color-primary: #74d1aa;
+  --color-primary-hover: #93ddbd;
+  --color-primary-soft: #16302a;
+  --color-primary-contrast: #0b1a14;
+  --color-accent: #eba06b;
+  --color-accent-soft: #3a2618;
+  --color-star: #f2b93b;
+  --color-danger: #f97066;
+  --color-danger-soft: #3a1917;
+  --color-danger-border: rgb(249 112 102 / 0.3);
+  --color-success: #5fd39a;
+  --color-success-soft: #13291e;
+  --color-success-border: rgb(95 211 154 / 0.3);
+  --color-success-contrast: #0b1a14;
+  --color-focus: #7aa7ff;
+  --color-header-bg: rgb(14 17 16 / 0.8);
+  --color-overlay: rgb(0 0 0 / 0.6);
+  --color-hero-glow: rgb(116 209 170 / 0.12);
+  --color-hero-glow-2: rgb(235 160 107 / 0.1);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.35);
+  --shadow-lg: 0 24px 64px rgb(0 0 0 / 0.55);
 }

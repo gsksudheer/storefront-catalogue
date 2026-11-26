@@ -1,15 +1,22 @@
+.section {
+  scroll-margin-top: 140px;
+}
 .section + .section {
   margin-top: var(--space-8);
 }
 .header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
   margin-bottom: var(--space-5);
 }
 .title {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  margin-top: var(--space-1);
+  font-size: var(--text-2xl);
+  line-height: 1.15;
 }
 .subtitle {
-  margin-top: var(--space-1);
+  margin-top: var(--space-2);
   color: var(--color-muted);
 }

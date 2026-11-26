@@ -7,23 +7,21 @@ import styles from './CategoryNav.module.css';
 
 export function CategoryNav() {
   const { data } = useApi<CategoriesResponse>(catalogueApi.categories());
-  // Navigation is progressive: if categories fail to load, the rest of the page still works.
+  // Progressive: if categories fail to load, the rest of the page still works.
   if (!data?.categories.length) return null;
 
+  const cls = ({ isActive }: { isActive: boolean }) => `${styles.link} ${isActive ? styles.active : ''}`;
   return (
     <nav aria-label="Categories" className={styles.nav}>
       <ul className={`container ${styles.list}`}>
         <li>
-          <NavLink to="/" end className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
-            All
+          <NavLink to="/" end className={cls}>
+            All products
           </NavLink>
         </li>
         {data.categories.map((c) => (
           <li key={c}>
-            <NavLink
-              to={categoryPath(c)}
-              className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
-            >
+            <NavLink to={categoryPath(c)} className={cls}>
               {formatCategory(c)}
             </NavLink>
           </li>

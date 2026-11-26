@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import type { Product } from '../api/types';
 import { formatCategory, formatPrice, productPath } from '../lib/format';
+import { ArrowRightIcon } from './Icons';
 import { ProductImage } from './ProductImage';
 import { Rating } from './Rating';
 import styles from './ProductCard.module.css';
@@ -17,7 +18,12 @@ export function ProductCard({ product, badge }: { product: Product; badge?: stri
           <p className={styles.category}>{formatCategory(product.category)}</p>
           <h3 className={styles.title}>{product.title}</h3>
           <Rating rate={product.rating.rate} count={product.rating.count} />
-          <p className={styles.price}>{formatPrice(product.price)}</p>
+          <div className={styles.footer}>
+            <p className={styles.price}>{formatPrice(product.price)}</p>
+            <span className={styles.go} aria-hidden="true">
+              <ArrowRightIcon width={18} height={18} />
+            </span>
+          </div>
         </div>
       </Link>
     </article>

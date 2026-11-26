@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import { fail, mockApi, ok, product } from '../../test/mockApi';
 import { renderRoute } from '../../test/render';
@@ -79,5 +80,40 @@ describe('Enquiry', () => {
     const { user } = await openEnquiry();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('button', { name: /enquire about this product/i })).toBeInTheDocument();
+  });
+});
+
+describe('Enquiry panel', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('opens as a dialog and closes with Escape, returning focus to the trigger', async () => {
+    const { user } = await openEnquiry();
+    expect(screen.getByRole('dialog', { name: 'Send an enquiry' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /enquire about this product/i })).toHaveFocus();
+  });
+
+  it('links to the exact email in the demo inbox when configured', async () => {
+    vi.stubEnv('VITE_DEMO_INBOX_URL', 'http://localhost:8025');
+    const { user } = await openEnquiry({ 'POST /api/enquiries': ok({ status: 'received', reference: 'AB12CD34' }) });
+    await user.type(screen.getByLabelText(/name/i), 'Ada');
+    await user.type(screen.getByLabelText(/email/i), 'ada@example.com');
+    await user.click(screen.getByRole('button', { name: 'Send enquiry' }));
+
+    const link = await screen.findByRole('link', { name: /view the email sent to sales/i });
+    expect(link).toHaveAttribute('href', 'http://localhost:8025/search?q=AB12CD34');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  it('hides demo inbox links when not configured (production)', async () => {
+    vi.stubEnv('VITE_DEMO_INBOX_URL', '');
+    const { user } = await openEnquiry({ 'POST /api/enquiries': ok({ status: 'received', reference: 'AB12CD34' }) });
+    await user.type(screen.getByLabelText(/name/i), 'Ada');
+    await user.type(screen.getByLabelText(/email/i), 'ada@example.com');
+    await user.click(screen.getByRole('button', { name: 'Send enquiry' }));
+    await screen.findByRole('heading', { name: 'Thank you, Ada!' });
+    expect(screen.queryByRole('link', { name: /view the email/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /inbox/i })).not.toBeInTheDocument();
   });
 });

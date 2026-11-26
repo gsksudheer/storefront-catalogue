@@ -26,24 +26,21 @@ export function CategoryPage() {
   return (
     <div className="container">
       <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label }]} />
-      <header className={styles.header}>
-        <h1 className={styles.title}>{label}</h1>
-        {data && (
-          <p className={styles.meta}>
-            {total} {total === 1 ? 'product' : 'products'}
-          </p>
-        )}
+      <header className={styles.banner}>
+        <p className="eyebrow">Category</p>
+        <h1 className={`display ${styles.title}`}>{label}</h1>
+        <p className={styles.meta}>{data ? `${total} ${total === 1 ? 'product' : 'products'}` : ' '}</p>
       </header>
 
       {loading && <ProductGridSkeleton count={3} />}
       {error && <ErrorState error={error} onRetry={retry} />}
       {data && (
         <>
-          <Section title="Top rated" subtitle={`The best of ${label.toLowerCase()}.`}>
+          <Section eyebrow="Top rated" title="Top rated" subtitle={`The best of ${label.toLowerCase()}, picked for you.`}>
             <ProductGrid products={data.topRated} badge="Top rated" />
           </Section>
           {data.additional.length > 0 && (
-            <Section title={`More in ${label.toLowerCase()}`}>
+            <Section eyebrow="Keep browsing" title={`More in ${label.toLowerCase()}`}>
               <ProductGrid products={data.additional} />
             </Section>
           )}
