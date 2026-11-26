@@ -10,12 +10,14 @@ export interface AppModules {
 
 export interface AppOptions {
   corsOrigin: string;
+  trustProxy?: number;
 }
 
 /** Builds the HTTP app from already-wired modules. No I/O here, so tests can use it directly. */
 export function createApp(modules: AppModules, options: AppOptions) {
   const app = express();
   app.disable('x-powered-by');
+  app.set('trust proxy', options.trustProxy ?? 0);
   app.use(helmet());
   app.use(cors({ origin: options.corsOrigin }));
   app.use(express.json({ limit: '10kb' }));

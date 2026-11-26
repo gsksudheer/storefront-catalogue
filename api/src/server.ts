@@ -7,7 +7,7 @@ import {
   FakeStoreProductSource,
   JsonFeaturedProvider,
 } from './modules/catalogue/index.js';
-import { createEnquiryModule } from './modules/enquiry/index.js';
+import { createEnquiryModule, SmtpMailer } from './modules/enquiry/index.js';
 
 /** Composition root: the only place that knows which concrete adapters are used. */
 const config = loadConfig();
@@ -23,14 +23,20 @@ const catalogue = createCatalogueModule({
 });
 
 const enquiry = createEnquiryModule({
-  // TODO(step 3): SMTP mailer
-  mailer: { send: async () => {} },
+  mailer: new SmtpMailer({
+    host: config.SMTP_HOST,
+    port: config.SMTP_PORT,
+    user: config.SMTP_USER || undefined,
+    pass: config.SMTP_PASS || undefined,
+    from: config.MAIL_FROM,
+  }),
   // In-process today; becomes an HTTP client if enquiry is split into its own service.
   productLookup: { getProductSummary: (id) => catalogue.getProductSummary(id) },
   salesInbox: config.SALES_INBOX_EMAIL,
+  rateLimit: { windowMs: config.ENQUIRY_RATE_LIMIT_WINDOW_MINUTES * 60_000, limit: config.ENQUIRY_RATE_LIMIT_MAX },
 });
 
-const app = createApp({ catalogue, enquiry }, { corsOrigin: config.CORS_ORIGIN });
+const app = createApp({ catalogue, enquiry }, { corsOrigin: config.CORS_ORIGIN, trustProxy: config.TRUST_PROXY });
 
 app.listen(config.PORT, () => {
   logger.info(`API listening on http://localhost:${config.PORT}`);
