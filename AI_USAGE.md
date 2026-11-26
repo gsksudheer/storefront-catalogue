@@ -1,77 +1,107 @@
 # AI usage
 
-> ✏️ **Draft prepared with the AI from the session record. TODO (me): rewrite in my own words, check every claim, fill in the time section, then delete this note.**
+## Tools and models
 
-## Tools & models
+I used one tool for this challenge: **Claude Code** (the command-line agent), with the **Claude Opus 5.5** model.
 
-| Tool | Used for |
-|---|---|
-| **Claude Code** (CLI), model **Claude Opus 5.5** | Reading the brief, planning, scaffolding, implementation, tests, running the stack, visual review, and drafting the docs |
-| _TODO: any other tools (e.g. ChatGPT, Copilot), or delete this row_ | |
+I used it for reading the brief, planning, writing code and tests, running the app, checking the UI in a headless browser, and drafting the docs. I reviewed everything it produced before committing, and I rewrote the docs in my own words.
 
-## How I worked with it
+## How I worked with the AI
 
-I treated the AI as a fast pair programmer, and I made the decisions. The loop for each step was:
+I treated the AI like a fast pair programmer. It typed most of the code. I made the decisions and checked the results.
 
-1. **Plan first.** I had the AI analyse the brief and propose a plan. Then I challenged it (DB or not, architecture) before any code was written.
-2. **Small steps, each one verified.** Scaffold → catalogue → enquiry → UI → docs. Each step ended with lint, typecheck and tests, plus a live run, before I committed.
-3. **Evidence over trust.** For every step I required proof beyond "tests pass": a live call to the real Fake Store API, an end-to-end run through Docker and Mailpit, **mutation checks** (breaking the code on purpose to prove the tests catch it), and **screenshots of the real UI** in headless Chrome at desktop and mobile sizes.
-4. **Commits** on a feature branch, as small conventional commits explaining *why*. Reviewing the diff before each commit.
+My loop for each step:
 
-## Agent instruction files
+1. **Plan before code.** I asked for a plan first, then pushed back on parts of it (the database, the backend structure) before any code was written.
+2. **Small steps.** Scaffold, then catalogue API, then enquiry API, then UI, then docs. Every step ended with lint, typecheck and tests, and a commit.
+3. **Don't trust "tests pass".** For each step I wanted extra proof:
+   - calls to the real Fake Store API, not just mocks
+   - a full run through Docker, checking that the email really arrived in Mailpit
+   - breaking the code on purpose to make sure the tests fail (mutation checks)
+   - screenshots of the real UI, desktop and mobile, light and dark
+4. **Read the diff before every commit.** I used small commits with clear messages so the history is easy to follow.
 
-- [`CLAUDE.md`](./CLAUDE.md): architecture rules (feature modules, ports and adapters, module boundaries, composition root), conventions (zod at boundaries, error shape, no secrets) and the "run lint, typecheck and tests before finishing" rule. I wrote it at the start so every later step followed the same rules.
+## Agent instruction file
 
-## Plan / spec
+- [`CLAUDE.md`](./CLAUDE.md) holds the rules I wanted the AI to follow every time: feature modules, ports and adapters, no imports across module internals, zod validation at the edges, one error format, design tokens only, no secrets, and "run lint, typecheck and tests before you finish". I wrote it at the start so later steps stayed consistent.
 
-- [`docs/PLAN.md`](./docs/PLAN.md): stack, module and endpoint map, and the step order. Agreed before implementation started.
-- _Optional: full session transcript exported with `/export` → `docs/ai-session-transcript.md`_
+## Plan
 
-## Key prompts and moments that shaped the solution
+- [`docs/PLAN.md`](./docs/PLAN.md): the stack, the modules and endpoints, and the order of the work. We agreed on it before building.
 
-1. **Analyse the brief, produce a plan.** _"go through this and let me know everything: plan, project name, process, git, deployment…"_
-   The AI pointed out that the brief scores **judgement**, not features, and that there's a live follow-up where I'd change the code. That set the approach: small, explainable, every decision written down.
+## Key prompts and moments
 
-2. **I questioned the database.** _"what about db? we don't need that?"_
-   This led to a deliberate **no-DB decision**: no criterion needs persistence. We named the real risk (an enquiry can be lost if email fails) and handled it by returning `503` so the UI never shows a false "Thank you". Persisting enquiries became the first "next" item, not a hidden gap. → DECISIONS.md D1, A7.
+**1. Understanding the brief**
 
-3. **I set the backend architecture.** _"backend: let's have it as modules, each one feature based, that can be used as microservices"_
-   The AI pushed back on *actual* microservices for a 5-page PoC and proposed a **modular monolith**: feature modules, ports and adapters, and enquiry reaching catalogue through its own `ProductLookup` port, so a module can be split into a service by swapping one adapter. I agreed, and asked for the boundary to be **enforced by an ESLint rule** rather than just documented.
+> "go through this and let me know everything: plan, project name, process, git, deployment"
 
-4. **Tests from the first commit.** _"what about testing, we have to include that"_
-   Test tooling and the first tests went in with the scaffold, before any features. Later, UI tests were written as the five acceptance criteria (GIVEN/WHEN/THEN) driving the real router and API client.
+The useful thing here was the AI pointing out that the brief scores **judgement**, not number of features, and that there's a live session where I'd have to change the code. So I aimed for something small and explainable, with every decision written down.
 
-5. **UI quality bar.** _"the UI should be so good, clean, neat and user friendly"_
-   Beyond writing the components, I had the AI **look at the running app** (headless Chrome screenshots, desktop and mobile). That found three layout bugs the unit tests couldn't (see below).
+**2. Questioning the database**
 
-6. **Second UI pass.** _"put a logo instead of S, search should be working, add light and dark theme, forms should be clean, show the email option here itself so reviewers can open and view it"_
-   I checked search in a real browser first (it worked; the real gap was no way to clear the box, plus no feedback while typing). That led to live suggestions with keyboard support and a clear button. The email request became a **demo-only, config-gated** deep link to the exact email in Mailpit, which helps reviewers without leaking into production builds.
+> "what about db? we don't need that?"
 
-## Where the AI got things wrong, and how they were caught
+We decided not to use a database, because none of the acceptance criteria need one. We were honest about the risk: if email is down, an enquiry could be lost. So the API returns an error and the UI never shows "Thank you" unless the email was really sent. Saving enquiries is the first item in "next steps". (DECISIONS.md D1 and A7.)
 
-| # | What the AI got wrong | How it was caught | Fix |
+**3. Choosing the backend structure**
+
+> "backend: let's have it as modules, each one feature based, that can be used as microservices"
+
+This was my idea. The AI advised against real microservices for a 5-page PoC and suggested a **modular monolith** instead: one deployable app, split into feature modules with clear interfaces. The enquiry module talks to the catalogue module through its own small interface, so it could become a separate service later by swapping one adapter. I agreed, and asked for the module boundaries to be **enforced by a lint rule**, not just written in a doc.
+
+**4. Tests from day one**
+
+> "what about testing, we have to include that"
+
+Testing tools and the first tests went in with the very first scaffold, before any features. The UI tests follow the five acceptance criteria (GIVEN / WHEN / THEN) and run the real router and API client. Only the network is mocked.
+
+**5. Raising the UI quality bar**
+
+> "the UI should be so good, clean, neat and user friendly"
+
+Writing components wasn't enough, so I had the AI open the running app in headless Chrome and take screenshots. That found layout bugs the unit tests couldn't see (see the table below).
+
+**6. Second UI pass**
+
+> "put a logo instead of S, search should be working, add light and dark theme, forms should be clean, show the email option here itself so reviewers can open and view it"
+
+Before changing anything, I checked search in a real browser. It worked. The real problems were that there was no way to clear the box and nothing happened while typing. So we added live suggestions, keyboard support and a clear button. For the email, we added a link that opens **the exact email** in Mailpit. It only shows when a demo setting is on, so a production build never links to an internal inbox.
+
+## Where the AI got things wrong, and how I caught it
+
+| # | What went wrong | How I caught it | How it was fixed |
 |---|---|---|---|
-| 1 | The **module-boundary lint rule** it wrote flagged legitimate imports *inside* a module (`adapters/`, `__tests__/` importing `../ports.js`). The regex assumed every file sits at the module root. | `npm run lint` failed when the first adapter tests were added. | Depth-aware patterns, then **tested the rule itself** with deliberate violations at both depths. Separate commit `7cbca40`. |
-| 2 | `vite.config.ts` used `process` without Node types. | **Typecheck** failed even though the UI tests had passed (and the Docker build would have failed). | Added `@types/node` to the UI tsconfig. |
-| 3 | **Malformed JSON or oversized requests returned 500** instead of 400 or 413. The error handler only knew about our own `AppError`. | Writing the enquiry route tests. | Body-parser errors mapped to `INVALID_JSON` / `PAYLOAD_TOO_LARGE`. Separate commit `11a14e2`. |
-| 4 | **Validation errors exposed zod's internal fields** (`origin`, `inclusive`, …) to API clients, tying the contract to the library. | Reading the **live API output**, not just the test results. | Reduced to `{ field, message }`, with a test. |
-| 5 | **Mobile layout:** the Search button ran off the screen at 390px. **Uneven card heights** with tall images. **Broken-image icons** when an image failed to load. | **Screenshots of the real UI** in headless Chrome. The unit tests were green for all three. | Measured the layout instead of guessing: the cause was flexbox `min-width: auto` (the input's default ~20-character width). Fixed with `min-width: 0`; cards with `overflow: hidden` (CSS `aspect-ratio` only holds when content is clipped); images with a `ProductImage` placeholder component and a test. |
-| 6 | The AI's own **screenshot script clicked the header's Search button** instead of the enquiry form's submit, which looked like the enquiry flow was broken. | Debugged *before* changing app code: logged the network requests and saw that no enquiry request had been sent. | Fixed the script's selector. The app was fine. Lesson: verify the verifier. |
-| 8 | After the redesign, **the 5 top-rated picks wrapped as 4 + 1**, leaving one orphan card. | Screenshot review of the redesigned home page in both themes. | Changed the grid column minimum, then **measured** rows at 1440, 1280 and 1024px instead of eyeballing. |
-| 7 | The UI CSS had **5 hard-coded colours**, breaking the rule in our own `CLAUDE.md` ("no hard-coded colours"). | Checking the code against `CLAUDE.md` before the docs commit: `grep` for hex/rgb values outside `tokens.css`. | Moved them into design tokens. Lesson: instruction files guide the AI but don't guarantee compliance, so check against them. |
+| 1 | The lint rule for module boundaries was wrong. It blocked normal imports *inside* a module, because it assumed every file sits at the top of its module folder. | Lint failed as soon as the first adapter tests were added. | Rewrote the rule to depend on how deep the importing file is, then tested the rule itself with deliberate bad imports. (Commit `7cbca40`.) |
+| 2 | `vite.config.ts` used `process` without Node types. | Typecheck failed, even though the UI tests passed. The Docker build would have failed too. | Added Node types to the UI config. |
+| 3 | A request with broken JSON or a huge body returned **500** instead of 400 or 413. | Writing the enquiry tests. | The error handler now returns clear 400 and 413 errors. (Commit `11a14e2`.) |
+| 4 | Validation errors exposed internal fields from the zod library to API users. | Reading the real API output, not just the test results. | Errors are now just `{ field, message }`, with a test. |
+| 5 | On mobile, the Search button was pushed off the screen. Card heights didn't line up with tall images. Broken images showed the browser's broken-image icon. | Screenshots of the real UI. All unit tests were green. | Measured the layout instead of guessing. The cause was the search input's default width stopping the form from shrinking; one CSS line fixed it. Also fixed the card image box, and added a clean "Image unavailable" placeholder with a test. |
+| 6 | The AI's own screenshot script clicked the header's Search button instead of the form's Submit button, so it looked like the enquiry form was broken. | I checked the network requests before touching the app and saw no enquiry had been sent. | Fixed the script. The app was fine. Lesson: check the checker too. |
+| 7 | The CSS had 5 hard-coded colours, breaking our own rule in `CLAUDE.md`. | I compared the code against `CLAUDE.md` before committing the docs (a quick search for colour values outside the tokens file). | Moved them into design tokens. An instruction file guides the AI, but you still have to check it was followed. |
+| 8 | After the redesign, the 5 top-rated products showed as 4 + 1, with one card alone on a second row. | Screenshot review of the new home page. | Changed the grid, then measured the rows at three screen widths instead of eyeballing it. |
 
-**One the AI got right because it checked instead of assuming:** before writing the Fake Store adapter it called the live API and found that **unknown IDs return `200` with an empty body**, not `404`. A naive adapter would crash on that. It's handled and has a test.
+**Something the AI got right because it checked first:** before writing the Fake Store code, it called the real API and found that an unknown product ID returns **200 with an empty body**, not 404. Code written from assumptions would have crashed on that. It's handled and tested.
 
-**How I made sure the tests actually test something:** I broke the code on purpose and checked the right tests failed: search changed from AND to OR (1 test failed), HTML escaping removed (1 failed), email-failure handling swallowed (2 failed), "Thank you" shown on failure (2 UI tests failed). Restoring the code brought everything back to green.
+**Making sure the tests are real:** I broke the code on purpose and checked that the right tests failed:
+
+- search changed from "all words" to "any word" → 1 test failed
+- HTML escaping removed from the email → 1 test failed
+- email errors silently ignored → 2 tests failed
+- "Thank you" shown even when sending failed → 2 UI tests failed
+
+Then I restored the code and everything went green again.
 
 ## Time spent
 
-> TODO (me): replace with my actual numbers.
+I worked in two sessions on the same day. These times come from my commit history.
 
 | Phase | Time |
 |---|---|
-| Reading the brief and planning (incl. challenging the plan with the AI) | _TODO_ |
-| Building (scaffold, API modules, UI) | _TODO_ |
-| Testing and verification (live checks, Docker E2E, mutation checks, visual review) | _TODO_ |
-| Reviewing code and writing docs | _TODO_ |
-| **Total** | **_TODO_** (time-box was 2–3 h) |
+| Planning: reading the brief, agreeing the plan, the database and architecture decisions | 20 min |
+| Building the critical path: scaffold, catalogue API, enquiry API, first UI | 45 min |
+| Testing and checks: live API checks, Docker and email end to end, mutation checks, screenshot review | 25 min |
+| Docs: README, DECISIONS.md, this file | 25 min |
+| UI polish (after the critical path): logo, light/dark theme, live search, enquiry side panel | 35 min |
+| **Total** | **about 2 hours 30 minutes** |
+
+All five acceptance criteria were working and tested about **1.5 hours** in. The UI polish came after that, as a deliberate extra so the client has something pleasant to click through in feedback sessions. It's in separate commits, so it's easy to review apart from the core work.
