@@ -22,6 +22,11 @@
   --color-success-soft: #f0fdf4;
   --color-star: #f59e0b;
   --color-focus: #2563eb;
+  --color-header-bg: rgb(255 255 255 / 0.92);
+  --color-hero-glow: rgb(15 118 110 / 0.12);
+  --color-danger-border: rgb(185 28 28 / 0.25);
+  --color-success-border: rgb(21 128 61 / 0.25);
+  --color-success-contrast: #ffffff;
 
   /* type */
   --font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
