@@ -14,8 +14,8 @@
 
 ## Steps
 1. Scaffold: structure, tooling, tests, Docker, CI ✅
-2. Catalogue: FakeStore adapter (+ TTL cache, response validation), featured provider, service, routes, tests
-3. Enquiry: schema, service, SMTP mailer, rate limit + honeypot, routes, tests
-4. UI: layout (search + categories), home, category, search, product, enquiry form, tests
-5. Docs: README, DECISIONS.md, AI_USAGE.md, time spent; open PR
+2. Catalogue: FakeStore adapter (+ TTL cache, response validation), featured provider, service, routes, tests ✅
+3. Enquiry: schema, service, SMTP mailer, rate limit + honeypot, routes, tests ✅
+4. UI: layout (search + categories), home, category, search, product, enquiry form, tests ✅
+5. Docs: README, DECISIONS.md, AI_USAGE.md, time spent; open PR (in progress)
 6. Bonus: deploy to a small AWS instance
